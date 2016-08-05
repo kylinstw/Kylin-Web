@@ -26,6 +26,11 @@
         var cube,cubeGeometry,cubeMaterial;
         var container;
         var controller;
+        var head;
+        var mixer;
+        var loader;
+
+        var prevTime = Date.now();
 
         init();
         animate();
@@ -54,7 +59,24 @@
             }
             cubeMaterial = new THREE.MeshBasicMaterial({ vertexColors:THREE.FaceColors,overdraw:0.5});
             cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-            scene.add(cube);
+//            scene.add(cube);
+            
+            
+            loader = new THREE.JSONLoader();
+            loader.load('obj/horse.js',function (obj) {
+
+                head = new THREE.Mesh( obj, new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors,overdraw:0.5,morphTargets:true} ) );
+                head.scale.multiplyScalar(1)
+                scene.add(head);
+
+                mixer = new THREE.AnimationMixer( head );
+
+                var clip = THREE.AnimationClip.CreateFromMorphTargetSequence( 'gallop', obj.morphTargets, 30 );
+                mixer.clipAction( clip ).setDuration( 1 ).play();
+
+            });
+
+
 
             renderer = new THREE.CanvasRenderer();
             renderer.setClearColor( 0xf0f0f0 );
@@ -79,7 +101,19 @@
         }
 
         function render() {
+
+            if ( mixer ) {
+
+                var time = Date.now();
+
+                mixer.update( ( time - prevTime ) * 0.001 );
+
+                prevTime = time;
+
+            }
+
             renderer.render(scene, camera);
+
         }
     </script>
 </body>
